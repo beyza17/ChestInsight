@@ -7,8 +7,8 @@ from streamlit_option_menu import option_menu
 from streamlit_extras.colored_header import colored_header
 from image_annotation import run_cls, dataframe_annotation
 from dicom_viewer_and_annon import anonymize_dicom_file, dicom_viewer
-from image_enhancement import clahe_image_enhance,increase_brightness
-from src.full_model.generate_reports_for_images import main_model
+from image_enhancement import clahe_image_enhance,increase_brightness, hist_eq, gamma
+from src.full_model.generate_reports_for_images import mainz
 import cv2
 import pandas as pd
 import numpy as np
@@ -50,7 +50,7 @@ def features():
         if image:
             option = st.selectbox(
                 'Select an algorithm for image enhancement',
-                ('Contrast limited adaptive histogram equalization','Brightness'), index=1)
+                ('Contrast limited adaptive histogram equalization','Histogram equalization','Brightness', 'Gamma correction'), index=1)
 
             col_1, col_2 = st.columns(2)
             col_1.image(image, caption='Original Image', use_column_width=True)
@@ -74,6 +74,26 @@ def features():
                 if col_2.button('Save Enhanced Image'):
                     cv2.imwrite(f'{path}{image.name.split(".")[0]}_increase_brightness_enhanced.jpeg', increase_brightness(path + image.name))
                     st.success(f"Image with ssr saved!")
+
+            elif option == 'Histogram equalization':
+                if col_1.button('Click to perform enhancement'):
+                    output_image = hist_eq(path + image.name)
+                    col_2.image(output_image, caption='Histogram Equalized Image')
+
+                if col_2.button('Save Enhanced Image'):
+                    cv2.imwrite(f'{path}{image.name.split(".")[0]}_Histogram_equalized.jpeg',
+                                hist_eq(path + image.name))
+                    st.success(f"Image with histogram equalization saved!")
+
+            elif option == 'Gamma correction':
+                if col_1.button('Click to perform enhancement'):
+                    output_image = gamma(path + image.name)
+                    col_2.image(output_image, caption='Gamma Corrected Image')
+
+                if col_2.button('Save Enhanced Image'):
+                    cv2.imwrite(f'{path}{image.name.split(".")[0]}_gamma_corrected.jpeg',
+                                gamma(path + image.name))
+                    st.success(f"Image with Gamma Correction Enhancement saved!")
 
     # ImgAnnotationTab: Here is the entry point for image annotation
     with ImgAnnotationTab:
@@ -100,7 +120,7 @@ def features():
             col_1.image(uploaded_image)
             coloured_to_gray_scale(f"{path}{uploaded_image.name}", path)
             if col_1.button('Generate Report'):    
-                report = main_model(f"{path}{uploaded_image.name.split('.')[0]}_gray_scaled.jpg")
+                report = mainz(f"{path}{uploaded_image.name.split('.')[0]}_gray_scaled.jpg")
                 col_2.write(report)
 
 
